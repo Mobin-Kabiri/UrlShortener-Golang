@@ -12,9 +12,9 @@ import (
 
 func setupTestServer() *http.ServeMux {
 	srv := server{
-        store: store.New(),
-        baseUrl: "http://localhost:8080",
-    }
+		store:   store.New(),
+		baseUrl: "http://localhost:8080",
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/shorten", srv.getCode)
 	mux.HandleFunc("GET /{code}", srv.getLongUrl)
@@ -45,7 +45,7 @@ func TestCreateAndRedirect(t *testing.T) {
 	// ----------------------------------------------
 
 	// endpoint: GET /{code}
-	getReq := httptest.NewRequest(http.MethodGet, "/" + resp.Code, nil)
+	getReq := httptest.NewRequest(http.MethodGet, "/"+resp.Code, nil)
 	getW := httptest.NewRecorder()
 	mux.ServeHTTP(getW, getReq)
 
@@ -60,81 +60,80 @@ func TestCreateAndRedirect(t *testing.T) {
 	// ----------------------------------------------
 }
 
-
 func TestErrorTable(t *testing.T) {
 	mux := setupTestServer()
 
 	testsTable := []struct {
-		name string
-		method string
-		path string
-		body string
+		name               string
+		method             string
+		path               string
+		body               string
 		expectedStatusCode int
 	}{
 		{
-			name: "Empty JSON Body",
-			method: http.MethodPost,
-			path: "/api/shorten",
-			body: `{}`,
+			name:               "Empty JSON Body",
+			method:             http.MethodPost,
+			path:               "/api/shorten",
+			body:               `{}`,
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Invalid JSON Format",
+			name:   "Invalid JSON Format",
 			method: http.MethodPost,
-			path: "/api/shorten",
+			path:   "/api/shorten",
 			body: `{
     			"sssurl":"https://go.dev/doc/"
 			}`,
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Empty URL",
+			name:   "Empty URL",
 			method: http.MethodPost,
-			path: "/api/shorten",
+			path:   "/api/shorten",
 			body: `{
     			"url":""
 			}`,
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "bad URL",
+			name:   "bad URL",
 			method: http.MethodPost,
-			path: "/api/shorten",
+			path:   "/api/shorten",
 			body: `{
     			"url":"sala.com"
 			}`,
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Bad Protocol",
+			name:   "Bad Protocol",
 			method: http.MethodPost,
-			path: "/api/shorten",
+			path:   "/api/shorten",
 			body: `{
     			"url":"httsps://go.dev/doc/"
 			}`,
 			expectedStatusCode: http.StatusBadRequest,
 		},
 		{
-			name: "Normal Scenario",
+			name:   "Normal Scenario",
 			method: http.MethodPost,
-			path: "/api/shorten",
+			path:   "/api/shorten",
 			body: `{
     			"url":"https://go.dev/doc/"
 			}`,
 			expectedStatusCode: http.StatusCreated,
 		},
 		{
-			name: "Invalid Method",
-			method: http.MethodGet,
-			path: "/api/shorten",
-			body: `{}`,
+			name:               "Invalid Method",
+			method:             http.MethodGet,
+			path:               "/api/shorten",
+			body:               `{}`,
 			expectedStatusCode: http.StatusMethodNotAllowed,
 		},
 		{
-			name: "Not Found Code",
-			method: http.MethodGet,
-			path: "/sallllaaam",
-			body: "",
+			name:               "Not Found Code",
+			method:             http.MethodGet,
+			path:               "/sallllaaam",
+			body:               "",
 			expectedStatusCode: http.StatusNotFound,
 		},
 	}

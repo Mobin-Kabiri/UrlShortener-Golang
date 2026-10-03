@@ -9,10 +9,10 @@ import (
 
 var (
 	ErrInvalidProtocol = errors.New("NORMALIZER - provided url must be in http/https protocol")
-	ErrBadFormat  = errors.New("NORMALIZER - provided url is not in standard format.")
-	ErrEmptyHost = errors.New("NORMALIZER - url's host is empty")
-	ErrEmptyInput  = errors.New("NORMALIZER - provided url is empty")
-	ErrMaxUrlReached  = errors.New("ENCODER - there is no space for a new url because of counter")
+	ErrBadFormat       = errors.New("NORMALIZER - provided url is not in standard format.")
+	ErrEmptyHost       = errors.New("NORMALIZER - url's host is empty")
+	ErrEmptyInput      = errors.New("NORMALIZER - provided url is empty")
+	ErrMaxUrlReached   = errors.New("ENCODER - there is no space for a new url because of counter")
 )
 
 // 62 valid charactars (for base62)
@@ -37,14 +37,14 @@ func EncodeToBase62String(number uint32) (string, error) {
 
 	// it can only contains ASCII so we can use byte
 	result := make([]byte, 0, len(tmpArr))
-	for i := len(tmpArr)-1; i >= 0; i-- {
+	for i := len(tmpArr) - 1; i >= 0; i-- {
 		result = append(result, validChar[tmpArr[i]])
 	}
-	
+
 	return string(result), nil
 }
 
-// returning error to acknowledge the problem 
+// returning error to acknowledge the problem
 func Normalize(longURL string) (string, error) {
 
 	trimmed := strings.TrimSpace(longURL)
@@ -69,25 +69,23 @@ func Normalize(longURL string) (string, error) {
 	if parsed.Host == "" {
 		return "", ErrEmptyHost
 	}
-	
 
 	// fragment is a local section and it does not represent main resource
 	parsed.Fragment = ""
 
-
 	// we do not need the port because of knowing the default protocol port
 	if (parsed.Scheme == "http" && parsed.Port() == "80") ||
-	(parsed.Scheme == "https" && parsed.Port() == "443") {
+		(parsed.Scheme == "https" && parsed.Port() == "443") {
 		parsed.Host = parsed.Hostname()
 	}
 
 	// removing the last slash if the url has some path
 	if len(parsed.Path) > 1 && strings.HasSuffix(parsed.Path, "/") {
 		parsed.Path = strings.TrimRight(parsed.Path, "/")
-	} 
+	}
 
 	// saving same address if it have / at the end or not
-	if parsed.Path=="" {
+	if parsed.Path == "" {
 		parsed.Path = "/"
 	}
 

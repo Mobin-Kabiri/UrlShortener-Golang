@@ -61,7 +61,6 @@ func TestNotFoundUrl(t *testing.T) {
 	}
 }
 
-
 func TestConcurrentRequests(t *testing.T) {
 	store := New()
 	url := "https://salam.com/hello"
@@ -94,7 +93,7 @@ func TestConcurrentRequests(t *testing.T) {
 	}
 
 	currCounter := store.counter
-	if currCounter - 1 != preCounter {
+	if currCounter-1 != preCounter {
 		t.Fatal("problem in concurrency: counter has increased more than once")
 	}
 }

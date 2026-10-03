@@ -5,11 +5,10 @@ package main
 // }
 
 type CreateCodeRequest struct {
-    Url     string `json:"url"`
+	Url string `json:"url"`
 }
 
 type CreateCodeResponse struct {
-    Code     string `json:"code"`
+	Code     string `json:"code"`
 	ShortURL string `json:"short_url"`
 }
-

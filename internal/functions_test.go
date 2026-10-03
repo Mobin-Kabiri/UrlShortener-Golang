@@ -8,10 +8,10 @@ import (
 
 func TestEncoding(t *testing.T) {
 	testsTable := []struct {
-		name string
-		input uint64
+		name           string
+		input          uint64
 		expectedOutput string
-		wantErr error
+		wantErr        error
 	}{
 		{name: "zero", input: 0, expectedOutput: "0"},
 		{name: "lastChar", input: 61, expectedOutput: "Z"},
@@ -38,10 +38,10 @@ func TestEncoding(t *testing.T) {
 
 func TestNormalize(t *testing.T) {
 	testsTable := []struct {
-		name string
-		input string
+		name           string
+		input          string
 		expectedOutput string
-		wantErr error
+		wantErr        error
 	}{
 		{name: "no scheme", input: "test.com", wantErr: ErrInvalidProtocol},
 		{name: "ftp scheme", input: "ftp://test.com", wantErr: ErrInvalidProtocol},
@@ -81,7 +81,7 @@ func TestNormalize(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			res, err := Normalize(tt.input)
 			res2, _ := Normalize(res)
-			
+
 			if !errors.Is(err, tt.wantErr) {
 				t.Fatalf("normal(%q) error = %v, want %v", tt.input, err, tt.wantErr)
 			}
@@ -96,7 +96,7 @@ func TestNormalize(t *testing.T) {
 }
 
 func TestNormalizeOnSameResource(t *testing.T) {
-	tests := [...]string{"http://salam.com:80", "http://salam.com/", "http://salam.com","http://salam.cOm:80"}
+	tests := [...]string{"http://salam.com:80", "http://salam.com/", "http://salam.com", "http://salam.cOm:80"}
 	normalizedFirst, err := Normalize(tests[0])
 	if err != nil {
 		t.Error("unexpected error in normalize function")
@@ -106,8 +106,8 @@ func TestNormalizeOnSameResource(t *testing.T) {
 		if err != nil {
 			t.Error("unexpected error in normalize function")
 		}
-		if(curr != normalizedFirst){
+		if curr != normalizedFirst {
 			t.Errorf("normal(%q) = %q, want %q", tt, curr, normalizedFirst)
-		} 
+		}
 	}
 }

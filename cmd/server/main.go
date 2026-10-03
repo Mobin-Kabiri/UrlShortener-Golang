@@ -11,12 +11,12 @@ import (
 )
 
 type server struct {
-    store *store.Store
-    baseUrl  string
+	store   *store.Store
+	baseUrl string
 }
 
 func (s *server) getCode(w http.ResponseWriter, r *http.Request) {
-    
+
 	var req CreateCodeRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -24,33 +24,33 @@ func (s *server) getCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    code,err := s.store.GetShortCode(req.Url)
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest)
+	code, err := s.store.GetShortCode(req.Url)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
-    }
+	}
 
-    shortUrl := s.baseUrl + "/" + code
-    data := CreateCodeResponse{
-        Code:     code,
-        ShortURL: shortUrl,
-    }
+	shortUrl := s.baseUrl + "/" + code
+	data := CreateCodeResponse{
+		Code:     code,
+		ShortURL: shortUrl,
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusCreated)
-    json.NewEncoder(w).Encode(data)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(data)
 }
 
 func (s *server) getLongUrl(w http.ResponseWriter, r *http.Request) {
 
-    code := r.PathValue("code")
-    if code == "" {
-        http.Error(w, "Short code is required", http.StatusBadRequest)
-        return
-    }
+	code := r.PathValue("code")
+	if code == "" {
+		http.Error(w, "Short code is required", http.StatusBadRequest)
+		return
+	}
 
-    longUrl,err := s.store.GetLongUrl(code)
-    if err != nil {
+	longUrl, err := s.store.GetLongUrl(code)
+	if err != nil {
 		if errors.Is(err, store.ErrUrlNotFound) {
 			http.Error(w, "URL not found", http.StatusNotFound) // 404
 			return
@@ -59,13 +59,12 @@ func (s *server) getLongUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    // w.Header().Set("Location", longUrl)
-    // w.WriteHeader(http.StatusFound) // 302
+	// w.Header().Set("Location", longUrl)
+	// w.WriteHeader(http.StatusFound) // 302
 
-    //this is standard approach rather than upper code
-    http.Redirect(w, r, longUrl, http.StatusFound)
+	//this is standard approach rather than upper code
+	http.Redirect(w, r, longUrl, http.StatusFound)
 }
-
 
 func setupServer(s *server) *http.ServeMux {
 	mux := http.NewServeMux()
@@ -76,22 +75,21 @@ func setupServer(s *server) *http.ServeMux {
 
 func main() {
 
-    srv := server{
-        store: store.New(),
-        baseUrl: "",
-    }
+	srv := server{
+		store:   store.New(),
+		baseUrl: "",
+	}
 	addrFlag := flag.String("addr", ":8080", "service port")
 	baseFlag := flag.String("base", "http://localhost:8080", "service url")
 	flag.Parse()
 
-    baseUrl := strings.TrimRight(*baseFlag, "/")
-    srv.baseUrl = baseUrl
+	baseUrl := strings.TrimRight(*baseFlag, "/")
+	srv.baseUrl = baseUrl
 
-    mux := setupServer(&srv)
+	mux := setupServer(&srv)
 
-    // log the errors
-    if err := http.ListenAndServe(*addrFlag, mux);
-    err != nil {
-    log.Fatal(err)
-    }
+	// log the errors
+	if err := http.ListenAndServe(*addrFlag, mux); err != nil {
+		log.Fatal(err)
+	}
 }
