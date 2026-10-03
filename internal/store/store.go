@@ -38,7 +38,7 @@ func (s *Store) GetLongUrl(code string) (string,error) {
 
 func (s *Store) GetShortCode(longUrl string) (string,error) {
 	normalizedUrl, err := internal.Normalize(longUrl)
-	if err!=nil{
+	if err != nil{
 		return "",err
 	}
 
@@ -58,7 +58,10 @@ func (s *Store) GetShortCode(longUrl string) (string,error) {
 		return code, nil
 	}
 
-	encodedCode := internal.EncodeToBase62String(s.counter)
+	encodedCode, err := internal.EncodeToBase62String(s.counter)
+	if err != nil {
+		return "", err
+	}
 	s.counter += 1
 	s.longUrlToCode[normalizedUrl] = encodedCode
 	s.codeToLongUrl[encodedCode] = normalizedUrl

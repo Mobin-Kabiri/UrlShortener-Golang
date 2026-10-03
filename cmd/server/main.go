@@ -10,10 +10,12 @@ import (
 	"url-shortener/internal/store"
 )
 
-var storeObject *store.Store
-var baseUrl string
+type server struct {
+    store *store.Store
+    baseUrl  string
+}
 
-func getCode(w http.ResponseWriter, r *http.Request) {
+func (s *server) getCode(w http.ResponseWriter, r *http.Request) {
     
 	var req CreateCodeRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -22,13 +24,13 @@ func getCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    code,err := storeObject.GetShortCode(req.Url)
+    code,err := s.store.GetShortCode(req.Url)
     if err != nil {
         http.Error(w, err.Error(), http.StatusBadRequest)
 		return
     }
 
-    shortUrl := baseUrl + "/" + code
+    shortUrl := s.baseUrl + "/" + code
     data := CreateCodeResponse{
         Code:     code,
         ShortURL: shortUrl,
@@ -39,7 +41,7 @@ func getCode(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(data)
 }
 
-func getLongUrl(w http.ResponseWriter, r *http.Request) {
+func (s *server) getLongUrl(w http.ResponseWriter, r *http.Request) {
 
     code := r.PathValue("code")
     if code == "" {
@@ -47,7 +49,7 @@ func getLongUrl(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    longUrl,err := storeObject.GetLongUrl(code)
+    longUrl,err := s.store.GetLongUrl(code)
     if err != nil {
 		if errors.Is(err, store.ErrUrlNotFound) {
 			http.Error(w, "URL not found", http.StatusNotFound) // 404
@@ -65,21 +67,27 @@ func getLongUrl(w http.ResponseWriter, r *http.Request) {
 }
 
 
+func setupServer(s *server) *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /api/shorten", s.getCode)
+	mux.HandleFunc("GET /{code}", s.getLongUrl)
+	return mux
+}
+
 func main() {
 
+    srv := server{
+        store: store.New(),
+        baseUrl: "",
+    }
 	addrFlag := flag.String("addr", ":8080", "service port")
 	baseFlag := flag.String("base", "http://localhost:8080", "service url")
 	flag.Parse()
 
-    baseUrl = strings.TrimRight(*baseFlag, "/")
+    baseUrl := strings.TrimRight(*baseFlag, "/")
+    srv.baseUrl = baseUrl
 
-    //init temp db
-    storeObject = store.New()
-
-    // requests format
-    mux := http.NewServeMux()
-    mux.HandleFunc("POST /api/shorten", getCode)
-    mux.HandleFunc("GET /{code}", getLongUrl)
+    mux := setupServer(&srv)
 
     // log the errors
     if err := http.ListenAndServe(*addrFlag, mux);
