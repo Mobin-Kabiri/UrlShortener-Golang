@@ -10,6 +10,6 @@ type CreateCodeRequest struct {
 
 type CreateCodeResponse struct {
     Code     string `json:"code"`
-	ShortURL string `json:"short_url`
+	ShortURL string `json:"short_url"`
 }
 
