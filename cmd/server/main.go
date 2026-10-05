@@ -7,7 +7,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"url-shortener/internal/store"
+	"url-shortener/internal"
+	"url-shortener/store"
 )
 
 type server struct {
@@ -51,7 +52,7 @@ func (s *server) getLongUrl(w http.ResponseWriter, r *http.Request) {
 
 	longUrl, err := s.store.GetLongUrl(code)
 	if err != nil {
-		if errors.Is(err, store.ErrUrlNotFound) {
+		if errors.Is(err, internal.ErrUrlNotFound) {
 			http.Error(w, "URL not found", http.StatusNotFound) // 404
 			return
 		}

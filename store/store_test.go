@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sync"
 	"testing"
+	"url-shortener/internal"
 )
 
 func TestCreateAndGet(t *testing.T) {
@@ -56,7 +57,7 @@ func TestNotFoundUrl(t *testing.T) {
 		t.Fatal("expected error")
 	}
 
-	if !errors.Is(err, ErrUrlNotFound) {
+	if !errors.Is(err, internal.ErrUrlNotFound) {
 		t.Errorf("expected ErrUrlNotFound, but got: %v", err)
 	}
 }

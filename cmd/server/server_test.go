@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"url-shortener/internal/store"
+	"url-shortener/store"
 )
 
 func setupTestServer() *http.ServeMux {

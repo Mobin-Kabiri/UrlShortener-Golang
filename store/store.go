@@ -1,14 +1,10 @@
 package store
 
 import (
-	"errors"
 	"sync"
 	"url-shortener/internal"
 )
 
-var (
-	ErrUrlNotFound = errors.New("STORE - url not found ")
-)
 
 type Store struct {
 	counter       uint32
@@ -31,7 +27,7 @@ func (s *Store) GetLongUrl(code string) (string, error) {
 
 	longUrl, exist := s.codeToLongUrl[code]
 	if !exist {
-		return "", ErrUrlNotFound
+		return "", internal.ErrUrlNotFound
 	}
 	return longUrl, nil
 }
