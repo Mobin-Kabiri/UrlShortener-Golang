@@ -7,14 +7,22 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 	"url-shortener/internal"
 	"url-shortener/store"
 )
 
 type server struct {
-	store   *store.Store
+	store   StoreInferface
 	baseUrl string
 }
+
+// naming storeinterface to not match with store package
+type StoreInferface interface {
+	GetShortCode(url string) (code string, err error)
+	GetLongUrl(code string) (urlObj internal.UrlInfo, err error)
+}
+
 
 func (s *server) getCode(w http.ResponseWriter, r *http.Request) {
 
@@ -24,7 +32,7 @@ func (s *server) getCode(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid JSON Body - Request body does not matched", http.StatusBadRequest)
 		return
 	}
-
+	
 	code, err := s.store.GetShortCode(req.Url)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -50,7 +58,7 @@ func (s *server) getLongUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	longUrl, err := s.store.GetLongUrl(code)
+	urlObj, err := s.store.GetLongUrl(code)
 	if err != nil {
 		if errors.Is(err, internal.ErrUrlNotFound) {
 			http.Error(w, "URL not found", http.StatusNotFound) // 404
@@ -64,15 +72,45 @@ func (s *server) getLongUrl(w http.ResponseWriter, r *http.Request) {
 	// w.WriteHeader(http.StatusFound) // 302
 
 	//this is standard approach rather than upper code
-	http.Redirect(w, r, longUrl, http.StatusFound)
+	http.Redirect(w, r, urlObj.LongUrl, http.StatusFound)
+}
+
+func (s *server) getLongUrlObj(w http.ResponseWriter, r *http.Request) {
+
+	code := r.PathValue("code")
+	if code == "" {
+		http.Error(w, "Short code is required", http.StatusBadRequest)
+		return
+	}
+
+	urlObj, err := s.store.GetLongUrl(code)
+	if err != nil {
+		if errors.Is(err, internal.ErrUrlNotFound) {
+			http.Error(w, "URL not found", http.StatusNotFound) // 404
+			return
+		}
+		http.Error(w, "Internal server error", http.StatusInternalServerError) // 500
+		return
+	}
+
+	data := GetUrlObjResponse{
+		LongUrl:     urlObj.LongUrl,
+		CreatedAt: urlObj.CreatedAt.Format(time.RFC3339),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(data)
 }
 
 func setupServer(s *server) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/shorten", s.getCode)
 	mux.HandleFunc("GET /{code}", s.getLongUrl)
+	mux.HandleFunc("GET /api/v1/links/{code}", s.getLongUrlObj)
 	return mux
 }
+
 
 func main() {
 

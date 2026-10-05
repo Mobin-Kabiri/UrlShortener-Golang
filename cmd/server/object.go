@@ -12,3 +12,8 @@ type CreateCodeResponse struct {
 	Code     string `json:"code"`
 	ShortURL string `json:"short_url"`
 }
+
+type GetUrlObjResponse struct {
+	LongUrl     string `json:"url"`
+	CreatedAt 	string `json:"created_at"`
+}

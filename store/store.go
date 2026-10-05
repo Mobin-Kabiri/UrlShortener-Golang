@@ -2,6 +2,7 @@ package store
 
 import (
 	"sync"
+	"time"
 	"url-shortener/internal"
 )
 
@@ -10,26 +11,29 @@ type Store struct {
 	counter       uint32
 	mu            sync.RWMutex // rw allows us to read parallel
 	longUrlToCode map[string]string
-	codeToLongUrl map[string]string
+	codeToLongUrl map[string]internal.UrlInfo
 }
+
+
 
 func New() (s *Store) {
 	return &Store{
 		counter:       916132832, // its 62^5 to get at least len=6 shortCode
 		longUrlToCode: make(map[string]string),
-		codeToLongUrl: make(map[string]string),
+		codeToLongUrl: make(map[string]internal.UrlInfo),
 	}
 }
 
-func (s *Store) GetLongUrl(code string) (string, error) {
+func (s *Store) GetLongUrl(code string) (internal.UrlInfo, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	longUrl, exist := s.codeToLongUrl[code]
+	urlObj, exist := s.codeToLongUrl[code]
 	if !exist {
-		return "", internal.ErrUrlNotFound
+		return internal.UrlInfo{}, internal.ErrUrlNotFound
 	}
-	return longUrl, nil
+
+	return urlObj, nil
 }
 
 func (s *Store) GetShortCode(longUrl string) (string, error) {
@@ -38,6 +42,7 @@ func (s *Store) GetShortCode(longUrl string) (string, error) {
 		return "", err
 	}
 
+	// this section is for first reading try - just read lock ---
 	s.mu.RLock()
 	code, exist := s.longUrlToCode[normalizedUrl]
 	if exist {
@@ -45,6 +50,7 @@ func (s *Store) GetShortCode(longUrl string) (string, error) {
 		return code, nil
 	}
 	s.mu.RUnlock()
+	// ---
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -60,7 +66,8 @@ func (s *Store) GetShortCode(longUrl string) (string, error) {
 	}
 	s.counter += 1
 	s.longUrlToCode[normalizedUrl] = encodedCode
-	s.codeToLongUrl[encodedCode] = normalizedUrl
+	urlObj := internal.UrlInfo{LongUrl: normalizedUrl, CreatedAt: time.Now().UTC()}
+	s.codeToLongUrl[encodedCode] = urlObj
 
 	return encodedCode, nil
 }
