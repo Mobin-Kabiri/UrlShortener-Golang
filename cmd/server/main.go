@@ -154,6 +154,14 @@ func initDb() *storeDB.SqlStore{
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatalf("failed to get sql db: %v", err)
+	}
+
+	// one connection avoids db locked err
+	sqlDB.SetMaxOpenConns(1)
+
 	dbStore, err := storeDB.New(db)
 	if err != nil {
 		log.Fatalf("failed to initialize sql store: %v", err)
