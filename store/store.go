@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"math"
 	"sync"
 	"time"
 	"url-shortener/internal"
@@ -16,10 +17,17 @@ type Store struct {
 }
 
 
-
 func New() (s *Store) {
 	return &Store{
 		counter:       916132832, // its 62^5 to get at least len=6 shortCode
+		longUrlToCode: make(map[string]string),
+		codeToLongUrl: make(map[string]internal.UrlInfo),
+	}
+}
+
+func NewForTesting() (s *Store) {
+	return &Store{
+		counter:       math.MaxUint32,
 		longUrlToCode: make(map[string]string),
 		codeToLongUrl: make(map[string]internal.UrlInfo),
 	}

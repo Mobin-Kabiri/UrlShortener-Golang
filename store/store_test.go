@@ -26,7 +26,7 @@ func TestCreateAndGet(t *testing.T) {
 	}
 
 	// check input and url from store
-	if longURL != url {
+	if longURL.LongUrl != url {
 		t.Errorf("expected %s, got %s", url, longURL)
 	}
 }
