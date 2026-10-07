@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"sync"
 	"time"
 	"url-shortener/internal"
@@ -39,7 +40,8 @@ func (s *Store) GetLongUrl(code string) (internal.UrlInfo, error) {
 func (s *Store) GetShortCode(longUrl string) (string, error) {
 	normalizedUrl, err := internal.Normalize(longUrl)
 	if err != nil {
-		return "", err
+		// err could be: ErrInvalidProtocol, ErrBadFormat, ErrEmptyHost, ErrEmptyInput
+		return "", fmt.Errorf("%w: %w", internal.ErrInvalidURL, err)
 	}
 
 	// this section is for first reading try - just read lock ---

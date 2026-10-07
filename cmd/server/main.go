@@ -35,7 +35,14 @@ func (s *server) getCode(w http.ResponseWriter, r *http.Request) {
 	
 	code, err := s.store.GetShortCode(req.Url)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		switch {
+		case errors.Is(err, internal.ErrInvalidURL):
+			http.Error(w, "Given url is invalid", http.StatusBadRequest) // 400
+		case errors.Is(err, internal.ErrMaxUrlReached):
+			http.Error(w, "Service is not available for now", http.StatusServiceUnavailable) // 503
+		default:
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError) // 500
+		}
 		return
 	}
 
@@ -114,10 +121,12 @@ func setupServer(s *server) *http.ServeMux {
 
 func main() {
 
+	// the interface is getting 'store' object
 	srv := server{
 		store:   store.New(),
 		baseUrl: "",
 	}
+
 	addrFlag := flag.String("addr", ":8080", "service port")
 	baseFlag := flag.String("base", "http://localhost:8080", "service url")
 	flag.Parse()

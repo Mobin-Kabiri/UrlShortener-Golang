@@ -10,15 +10,13 @@ import (
 	"url-shortener/store"
 )
 
+// fixed: calling real function instead of recreating it
 func setupTestServer() *http.ServeMux {
 	srv := server{
 		store:   store.New(),
 		baseUrl: "http://localhost:8080",
 	}
-	mux := http.NewServeMux()
-	mux.HandleFunc("POST /api/shorten", srv.getCode)
-	mux.HandleFunc("GET /{code}", srv.getLongUrl)
-	return mux
+	return setupServer(&srv)
 }
 
 func TestCreateAndRedirect(t *testing.T) {
