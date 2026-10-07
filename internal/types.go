@@ -4,8 +4,7 @@ import (
 	"time"
 )
 
-
 type UrlInfo struct {
-	LongUrl string
+	LongUrl   string
 	CreatedAt time.Time
 }

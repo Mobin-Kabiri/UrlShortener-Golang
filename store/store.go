@@ -8,14 +8,12 @@ import (
 	"url-shortener/internal"
 )
 
-
 type Store struct {
 	counter       uint32
 	mu            sync.RWMutex // rw allows us to read parallel
 	longUrlToCode map[string]string
 	codeToLongUrl map[string]internal.UrlInfo
 }
-
 
 func New() (s *Store) {
 	return &Store{

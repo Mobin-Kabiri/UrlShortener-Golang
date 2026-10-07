@@ -14,6 +14,6 @@ type CreateCodeResponse struct {
 }
 
 type GetUrlObjResponse struct {
-	LongUrl     string `json:"url"`
-	CreatedAt 	string `json:"created_at"`
+	LongUrl   string `json:"url"`
+	CreatedAt string `json:"created_at"`
 }

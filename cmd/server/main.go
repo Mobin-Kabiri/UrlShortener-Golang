@@ -23,7 +23,6 @@ type StoreInferface interface {
 	GetLongUrl(code string) (urlObj internal.UrlInfo, err error)
 }
 
-
 func (s *server) getCode(w http.ResponseWriter, r *http.Request) {
 
 	var req CreateCodeRequest
@@ -32,7 +31,7 @@ func (s *server) getCode(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid JSON Body - Request body does not matched", http.StatusBadRequest)
 		return
 	}
-	
+
 	code, err := s.store.GetShortCode(req.Url)
 	if err != nil {
 		switch {
@@ -101,7 +100,7 @@ func (s *server) getLongUrlObj(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := GetUrlObjResponse{
-		LongUrl:     urlObj.LongUrl,
+		LongUrl:   urlObj.LongUrl,
 		CreatedAt: urlObj.CreatedAt.Format(time.RFC3339),
 	}
 
@@ -117,7 +116,6 @@ func setupServer(s *server) *http.ServeMux {
 	mux.HandleFunc("GET /api/v1/links/{code}", s.getLongUrlObj)
 	return mux
 }
-
 
 func main() {
 

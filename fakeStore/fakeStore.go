@@ -6,9 +6,9 @@ import (
 )
 
 type FakeStore struct {
-	Code 	string
-	LongUrl string      
-	Err 	error
+	Code    string
+	LongUrl string
+	Err     error
 }
 
 func (s *FakeStore) GetLongUrl(code string) (internal.UrlInfo, error) {
