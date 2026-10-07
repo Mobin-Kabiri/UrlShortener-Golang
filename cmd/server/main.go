@@ -8,8 +8,12 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"url-shortener/storeDB"
 	"url-shortener/internal"
 	"url-shortener/store"
+
+	"github.com/glebarez/sqlite"
+	"gorm.io/gorm"
 )
 
 // based on cloudflare maximum url length
@@ -139,20 +143,48 @@ func setupHttpServerConfiguration(addr string, mux *http.ServeMux) error {
 		MaxHeaderBytes:    MAX_HEADER_SIZE,
 	}
 
+	log.Println("Server is running ...")
 	return httpServer.ListenAndServe()
+}
+
+
+func initDb() *storeDB.SqlStore{
+	db, err := gorm.Open(sqlite.Open("myDatabase.db"), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
+
+	dbStore, err := storeDB.New(db)
+	if err != nil {
+		log.Fatalf("failed to initialize sql store: %v", err)
+	}
+
+	return dbStore
 }
 
 func main() {
 
-	// the interface is getting 'store' object
-	srv := server{
-		store:   store.New(),
-		baseUrl: "",
-	}
 
 	addrFlag := flag.String("addr", ":8080", "service port")
 	baseFlag := flag.String("base", "http://localhost:8080", "service url")
+	storeFlag := flag.String("store", "memory", "service storing option")
 	flag.Parse()
+
+	var storeOption StoreInferface
+	switch *storeFlag {
+	case "memory":
+		storeOption = store.New()
+	case "db":
+		storeOption = initDb()
+	default:
+		log.Fatal("invalid storing option")
+	}
+
+	// the interface is getting 'store' object
+	srv := server{
+		store:   storeOption,
+		baseUrl: "",
+	}
 
 	baseUrl := strings.TrimRight(*baseFlag, "/")
 	srv.baseUrl = baseUrl
