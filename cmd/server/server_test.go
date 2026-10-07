@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 	"time"
-	fakestore "url-shortener/fakeStore"
+	"url-shortener/fakeStore"
 	"url-shortener/internal"
 	"url-shortener/store"
 )
@@ -435,7 +435,7 @@ func TestFakeStoreErrors(t *testing.T) {
 		// GET /{code}
 		{
 			name:   "GET /salam - ErrUrlNotFound",
-			fake:   &fakestore.FakeStore{Err: internal.ErrUrlNotFound},
+			fake:   &fakestore.FakeStore{Err: internal.ErrNotFound},
 			method: http.MethodGet,
 			path:   "/salam",
 			want:   http.StatusNotFound, // 404
@@ -458,7 +458,7 @@ func TestFakeStoreErrors(t *testing.T) {
 		// GET /api/v1/links/{code}
 		{
 			name:   "GET /api/v1/links/codemode - ErrUrlNotFound",
-			fake:   &fakestore.FakeStore{Err: internal.ErrUrlNotFound},
+			fake:   &fakestore.FakeStore{Err: internal.ErrNotFound},
 			method: http.MethodGet,
 			path:   "/api/v1/links/codemode",
 			want:   http.StatusNotFound, // 404

@@ -52,13 +52,13 @@ func TestIdempotency(t *testing.T) {
 
 func TestNotFoundUrl(t *testing.T) {
 	store := New()
-	_, err := store.GetLongUrl("somethingDoesNotExist")
+	_, err := store.GetLongUrl("100001")
 	if err == nil {
 		t.Fatal("expected error")
 	}
 
-	if !errors.Is(err, internal.ErrUrlNotFound) {
-		t.Errorf("expected ErrUrlNotFound, but got: %v", err)
+	if !errors.Is(err, internal.ErrNotFound) {
+		t.Errorf("expected ErrNotFound, but got: %v", err)
 	}
 }
 

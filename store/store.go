@@ -32,12 +32,16 @@ func NewForTesting() (s *Store) {
 }
 
 func (s *Store) GetLongUrl(code string) (internal.UrlInfo, error) {
+	if len(code) > 8 || len(code) < 6 {
+		return internal.UrlInfo{}, fmt.Errorf("%w: %w", internal.ErrNotFound, internal.ErrCodeInvalidLength)
+	}
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	urlObj, exist := s.codeToLongUrl[code]
 	if !exist {
-		return internal.UrlInfo{}, internal.ErrUrlNotFound
+		return internal.UrlInfo{}, internal.ErrNotFound
 	}
 
 	return urlObj, nil

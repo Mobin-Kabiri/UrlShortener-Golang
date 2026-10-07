@@ -12,6 +12,16 @@ import (
 	"url-shortener/store"
 )
 
+// based on cloudflare maximum url length
+const MAX_URL_LENGTH = 32768
+
+// timeout enviroment
+const READ_TIMEOUT_SEC = 5
+const READ_HEADER_TIMEOUT_SEC = 3
+const WRITE_TIMEOUT_SEC = 10
+const IDLE_TIMOUT_SEC = 60
+const MAX_HEADER_SIZE = 16384
+
 type server struct {
 	store   StoreInferface
 	baseUrl string
@@ -24,6 +34,8 @@ type StoreInferface interface {
 }
 
 func (s *server) getCode(w http.ResponseWriter, r *http.Request) {
+
+	r.Body = http.MaxBytesReader(w, r.Body, MAX_URL_LENGTH)
 
 	var req CreateCodeRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -59,15 +71,14 @@ func (s *server) getCode(w http.ResponseWriter, r *http.Request) {
 func (s *server) getLongUrl(w http.ResponseWriter, r *http.Request) {
 
 	code := r.PathValue("code")
-	if code == "" {
-		http.Error(w, "Short code is required", http.StatusBadRequest)
-		return
-	}
 
 	urlObj, err := s.store.GetLongUrl(code)
 	if err != nil {
-		if errors.Is(err, internal.ErrUrlNotFound) {
+		if errors.Is(err, internal.ErrNotFound) {
 			http.Error(w, "URL not found", http.StatusNotFound) // 404
+			return
+		} else if errors.Is(err, internal.ErrCodeInvalidLength) {
+			http.Error(w, "Given code is not valid", http.StatusBadRequest) // 400
 			return
 		}
 		http.Error(w, "Internal server error", http.StatusInternalServerError) // 500
@@ -84,15 +95,14 @@ func (s *server) getLongUrl(w http.ResponseWriter, r *http.Request) {
 func (s *server) getLongUrlObj(w http.ResponseWriter, r *http.Request) {
 
 	code := r.PathValue("code")
-	if code == "" {
-		http.Error(w, "Short code is required", http.StatusBadRequest)
-		return
-	}
 
 	urlObj, err := s.store.GetLongUrl(code)
 	if err != nil {
-		if errors.Is(err, internal.ErrUrlNotFound) {
+		if errors.Is(err, internal.ErrNotFound) {
 			http.Error(w, "URL not found", http.StatusNotFound) // 404
+			return
+		} else if errors.Is(err, internal.ErrCodeInvalidLength) {
+			http.Error(w, "Given code is not valid", http.StatusBadRequest) // 400
 			return
 		}
 		http.Error(w, "Internal server error", http.StatusInternalServerError) // 500
@@ -117,6 +127,21 @@ func setupServer(s *server) *http.ServeMux {
 	return mux
 }
 
+func setupHttpServerConfiguration(addr string, mux *http.ServeMux) error {
+
+	httpServer := &http.Server{
+		Addr:              addr,
+		Handler:           mux,
+		ReadTimeout:       READ_TIMEOUT_SEC * time.Second,
+		ReadHeaderTimeout: READ_HEADER_TIMEOUT_SEC * time.Second,
+		WriteTimeout:      WRITE_TIMEOUT_SEC * time.Second,
+		IdleTimeout:       IDLE_TIMOUT_SEC * time.Second,
+		MaxHeaderBytes:    MAX_HEADER_SIZE,
+	}
+
+	return httpServer.ListenAndServe()
+}
+
 func main() {
 
 	// the interface is getting 'store' object
@@ -135,7 +160,7 @@ func main() {
 	mux := setupServer(&srv)
 
 	// log the errors
-	if err := http.ListenAndServe(*addrFlag, mux); err != nil {
+	if err := setupHttpServerConfiguration(*addrFlag, mux); err != nil {
 		log.Fatal(err)
 	}
 }
