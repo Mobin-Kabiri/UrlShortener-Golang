@@ -20,6 +20,7 @@ func EncodeToBase62String(number uint32) (string, error) {
 	}
 	// unint8 = element's range is 0-61
 	tmpArr := make([]uint8, 0, 8)
+	
 	for number != 0 {
 		remainder := number % 62
 		tmpArr = append(tmpArr, uint8(remainder))

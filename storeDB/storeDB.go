@@ -22,6 +22,7 @@ type SqlStore struct {
 	mu      sync.Mutex
 	counter uint32
 }
+
 const INITIAL_COUNTER = 916132832
 
 func New(db *gorm.DB) (*SqlStore, error) {
@@ -38,17 +39,17 @@ func New(db *gorm.DB) (*SqlStore, error) {
 	if err == nil {
 		counter = INITIAL_COUNTER + uint32(lastRecord.ID)
 		return &SqlStore{
-				db: db,
-				counter: counter,
-			}, nil
+			db:      db,
+			counter: counter,
+		}, nil
 	} else if errors.Is(err, gorm.ErrRecordNotFound) {
 		return &SqlStore{
-				db: db,
-				counter: counter,
-			}, nil
+			db:      db,
+			counter: counter,
+		}, nil
 	} else {
 		return nil, errors.New("failed to initialize")
-	}	
+	}
 }
 
 func (s *SqlStore) GetLongUrl(code string) (internal.UrlInfo, error) {
@@ -85,7 +86,6 @@ func (s *SqlStore) GetShortCode(longUrl string) (string, error) {
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return "", err
 	}
-
 
 	s.mu.Lock()
 	defer s.mu.Unlock()

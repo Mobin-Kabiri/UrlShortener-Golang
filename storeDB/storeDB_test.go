@@ -25,7 +25,6 @@ func openDB(t *testing.T, path string) (*gorm.DB, func()) {
 	if err != nil {
 		t.Fatalf("failed to get sql db: %v", err)
 	}
-	
 
 	// one connection for not getting lock error in goroutines
 	sqlDB.SetMaxOpenConns(1)
@@ -141,7 +140,7 @@ func TestConcurrentRequests(t *testing.T) {
 	}
 }
 
-// new test for part 4 
+// new test for part 4
 func TestRestart(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "restart.db")
 	url := "https://salam.com/hello"
@@ -157,7 +156,7 @@ func TestRestart(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error on GetShortCode: %v", err)
 	}
-	close1() 
+	close1()
 	// -------------------------------------------------
 
 	// -------------------------------------------------

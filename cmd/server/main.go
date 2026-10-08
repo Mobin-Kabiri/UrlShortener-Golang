@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"url-shortener/storeDB"
 	"url-shortener/internal"
 	"url-shortener/store"
+	"url-shortener/storeDB"
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
@@ -89,7 +89,7 @@ func (s *server) getLongUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// w.Header().Set("Location", longUrl)
+	// w.Header().Set("Location", urlObj.LongUrl)
 	// w.WriteHeader(http.StatusFound) // 302
 
 	//this is standard approach rather than upper code
@@ -147,8 +147,7 @@ func setupHttpServerConfiguration(addr string, mux *http.ServeMux) error {
 	return httpServer.ListenAndServe()
 }
 
-
-func initDb() *storeDB.SqlStore{
+func initDb() *storeDB.SqlStore {
 	db, err := gorm.Open(sqlite.Open("myDatabase.db"), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
@@ -171,7 +170,6 @@ func initDb() *storeDB.SqlStore{
 }
 
 func main() {
-
 
 	addrFlag := flag.String("addr", ":8080", "service port")
 	baseFlag := flag.String("base", "http://localhost:8080", "service url")

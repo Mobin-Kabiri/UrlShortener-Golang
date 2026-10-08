@@ -12,33 +12,33 @@ import (
 func BenchmarkShortenUrl(b *testing.B) {
 	mux := setupTestServer()
 
+	// build everything before the timed section
+	reqs := make([]*http.Request, b.N)
+	recs := make([]*httptest.ResponseRecorder, b.N)
+	for i := 0; i < b.N; i++ {
+		body := fmt.Sprintf(`{"url":"https://salam.com/%d"}`, i)
+		reqs[i] = httptest.NewRequest(http.MethodPost, "/api/shorten", strings.NewReader(body))
+		recs[i] = httptest.NewRecorder()
+	}
+
 	b.ReportAllocs()
 	b.ResetTimer()
 
-	i := 0
+	for i := 0; i < b.N; i++ {
+		mux.ServeHTTP(recs[i], reqs[i])
 
-	for b.Loop() {
-		i++
-		body := fmt.Sprintf(`{"url":"https://salam.com/%d"}`, i)
-		req := httptest.NewRequest(http.MethodPost, "/api/shorten", strings.NewReader(body))
-		w := httptest.NewRecorder()
-
-		mux.ServeHTTP(w, req)
-
-		if w.Code != http.StatusCreated {
-			b.Fatalf("expected 201, got %d", w.Code)
+		if recs[i].Code != http.StatusCreated {
+			b.Fatalf("expected 201, got %d", recs[i].Code)
 		}
 	}
 }
-
-
 func BenchmarkGetLongUrlDiff(b *testing.B) {
 	mux := setupTestServer()
 
-	// sending 10000 records before benchmark
+	// create 10000 short codes and pre-build a GET request for each
 	const numCodes = 10000
-	paths := make([]string, numCodes)
-	for i := range paths {
+	reqs := make([]*http.Request, numCodes)
+	for i := range reqs {
 		body := fmt.Sprintf(`{"url":"https://salam.com/%d"}`, i)
 		req := httptest.NewRequest(http.MethodPost, "/api/shorten", strings.NewReader(body))
 		w := httptest.NewRecorder()
@@ -52,17 +52,15 @@ func BenchmarkGetLongUrlDiff(b *testing.B) {
 		if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
 			b.Fatalf("error decoding response: %v", err)
 		}
-		paths[i] = "/" + resp.Code
+		reqs[i] = httptest.NewRequest(http.MethodGet, "/"+resp.Code, nil)
 	}
 
 	b.ReportAllocs()
 
 	i := 0
 	for b.Loop() {
-		req := httptest.NewRequest(http.MethodGet, paths[i%numCodes], nil)
 		w := httptest.NewRecorder()
-
-		mux.ServeHTTP(w, req)
+		mux.ServeHTTP(w, reqs[i%numCodes])
 
 		if w.Code != http.StatusFound {
 			b.Fatalf("need 302, got %d", w.Code)
@@ -71,12 +69,10 @@ func BenchmarkGetLongUrlDiff(b *testing.B) {
 	}
 }
 
-
 func BenchmarkGetLongUrlSame(b *testing.B) {
 	mux := setupTestServer()
 
-	b.ReportAllocs()
-	b.ResetTimer()
+	
 
 	body := `{"url":"https://salam.com/"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/shorten", strings.NewReader(body))
@@ -97,8 +93,11 @@ func BenchmarkGetLongUrlSame(b *testing.B) {
 		b.Fatalf("invalid response: %+v", resp)
 	}
 
+	req2 := httptest.NewRequest(http.MethodGet, "/"+resp.Code, nil)
+	
+	b.ReportAllocs()
 	for b.Loop() {
-		req2 := httptest.NewRequest(http.MethodGet, "/"+resp.Code, nil)
+		
 		w2 := httptest.NewRecorder()
 
 		mux.ServeHTTP(w2, req2)
