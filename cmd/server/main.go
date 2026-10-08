@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"flag"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 	"url-shortener/internal"
 	"url-shortener/store"
@@ -143,8 +147,30 @@ func setupHttpServerConfiguration(addr string, mux *http.ServeMux) error {
 		MaxHeaderBytes:    MAX_HEADER_SIZE,
 	}
 
-	log.Println("Server is running ...")
-	return httpServer.ListenAndServe()
+	//  running main server in backround with help of goroutine
+	go func() {
+		log.Println("Server is running ...")
+		err := httpServer.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
+
+	// wait for terminate signal like Ctrl + C
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	<-stop
+
+	// wait for requests which are in processing 10s
+	log.Println("Shutting down ... (waiting for remaining processes)")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := httpServer.Shutdown(ctx); err != nil {
+		return err
+	}
+	log.Println("Server is Stopped Successfully.")
+	return nil
 }
 
 func initDb() *storeDB.SqlStore {
