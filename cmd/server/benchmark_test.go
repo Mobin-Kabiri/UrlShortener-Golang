@@ -72,8 +72,6 @@ func BenchmarkGetLongUrlDiff(b *testing.B) {
 func BenchmarkGetLongUrlSame(b *testing.B) {
 	mux := setupTestServer()
 
-	
-
 	body := `{"url":"https://salam.com/"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/shorten", strings.NewReader(body))
 	w := httptest.NewRecorder()
@@ -94,10 +92,10 @@ func BenchmarkGetLongUrlSame(b *testing.B) {
 	}
 
 	req2 := httptest.NewRequest(http.MethodGet, "/"+resp.Code, nil)
-	
+
 	b.ReportAllocs()
 	for b.Loop() {
-		
+
 		w2 := httptest.NewRecorder()
 
 		mux.ServeHTTP(w2, req2)
