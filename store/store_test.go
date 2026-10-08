@@ -62,6 +62,25 @@ func TestNotFoundUrl(t *testing.T) {
 	}
 }
 
+func TestMaxUrlReached(t *testing.T) {
+	store := NewForTesting()
+	_, err := store.GetShortCode("http://salam.com/")
+	if !errors.Is(err, internal.ErrMaxUrlReached) {
+		t.Fatalf("need ErrMaxUrlReached, but got %v", err)
+	}
+}
+
+func TestInvalidCodeLength(t *testing.T) {
+	store := New()
+	tests := []string{"123", "alonglonglongcode"}
+	for _, code := range tests {
+		_, err := store.GetLongUrl(code)
+		if !errors.Is(err, internal.ErrCodeInvalidLength) {
+			t.Errorf("code %q: unexpected error %v", code, err)
+		}
+	}
+}
+
 func TestConcurrentRequests(t *testing.T) {
 	store := New()
 	url := "https://salam.com/hello"

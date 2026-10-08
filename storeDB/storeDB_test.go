@@ -2,6 +2,7 @@ package storeDB
 
 import (
 	"errors"
+	"math"
 	"path/filepath"
 	"sync"
 	"testing"
@@ -191,5 +192,25 @@ func TestRestart(t *testing.T) {
 	}
 	if code3 == code1 {
 		t.Errorf("new url got an old code: %s", code3)
+	}
+}
+
+func TestMaxUrlReached(t *testing.T) {
+	store := newTestStore(t)
+	store.counter = math.MaxUint32
+	_, err := store.GetShortCode("http://salam.com/")
+	if !errors.Is(err, internal.ErrMaxUrlReached) {
+		t.Fatalf("need ErrMaxUrlReached, but got %v", err)
+	}
+}
+
+func TestInvalidCodeLength(t *testing.T) {
+	store := newTestStore(t)
+	tests := []string{"123", "alonglonglongcode"}
+	for _, code := range tests {
+		_, err := store.GetLongUrl(code)
+		if !errors.Is(err, internal.ErrCodeInvalidLength) {
+			t.Errorf("code %q: unexpected error %v", code, err)
+		}
 	}
 }

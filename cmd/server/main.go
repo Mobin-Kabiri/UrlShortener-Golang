@@ -218,8 +218,7 @@ func main() {
 		baseUrl: "",
 	}
 
-	baseUrl := strings.TrimRight(*baseFlag, "/")
-	srv.baseUrl = baseUrl
+	srv.baseUrl = strings.TrimRight(*baseFlag, "/")
 
 	mux := setupServer(&srv)
 
