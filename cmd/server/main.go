@@ -39,7 +39,7 @@ const CLEANUP_LIVING_TIME_MINUTE = 10
 type server struct {
 	store   StoreInferface
 	baseUrl string
-	rl      *rateLimiter.RateLimiter
+	rl *rateLimiter.RateLimiter
 }
 
 // naming storeinterface to not match with store package

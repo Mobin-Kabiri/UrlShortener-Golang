@@ -42,3 +42,20 @@
 | [X] | 2 | `-race` clean with persistent store |
 
 # Part 5
+| Done | Pts | Requirement |
+|:----:|:---:|-------------|
+| [X] | 4 | `DECISIONS.md`: LB → N apps → shared store |
+| [X] | 3 | CDN / edge caching for redirects |
+| [x] | 3 | Write-path scaling (rate limit, queue, or code pool) |
+| [x] | 3 | Sharding / partitioning strategy |
+| [ ] | 4 | **Bonus code:** cache layer, load-test script + README numbers, etc. |
+
+# Part 6
+
+| Done | Pts | Requirement |
+|:----:|:---:|-------------|
+| [X] | 3 | Graceful shutdown working + documented |
+| [X] | 3 | Rate limit on create |
+| [X] | 2 | Domain policy in `DECISIONS.md` |
+| [X] | 2 | What you log vs never log |
+| [ ] | 4 | **Bonus:** pprof/metrics behind flag, or structured logging |

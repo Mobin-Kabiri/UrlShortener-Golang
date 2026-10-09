@@ -3,7 +3,11 @@
 ## How to run
 You can get this repo from github or extracrt the zip file
 
-after that: (in `starter` folder)
+```bash
+git clone https://github.com/Mobin-Kabiri/UrlShortener-Golang.git
+```
+
+after that: (inside `UrlShortener-Golang` folder)
 ```bash
 go run ./cmd/server -db=memory
 ```
