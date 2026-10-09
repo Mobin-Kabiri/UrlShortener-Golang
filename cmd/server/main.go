@@ -12,6 +12,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"url-shortener/cmd/server/rateLimiter"
 	"url-shortener/internal"
 	"url-shortener/store"
 	"url-shortener/storeDB"
@@ -30,9 +31,15 @@ const WRITE_TIMEOUT_SEC = 10
 const IDLE_TIMOUT_SEC = 60
 const MAX_HEADER_SIZE = 16384
 
+// rate limiter configuration
+const RATE_PER_MINUTE = 30
+const RATE_BURST = 10
+const CLEANUP_LIVING_TIME_MINUTE = 10
+
 type server struct {
 	store   StoreInferface
 	baseUrl string
+	rl      *rateLimiter.RateLimiter
 }
 
 // naming storeinterface to not match with store package
@@ -129,7 +136,14 @@ func (s *server) getLongUrlObj(w http.ResponseWriter, r *http.Request) {
 
 func setupServer(s *server) *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /api/shorten", s.getCode)
+
+	// replace handler with rate limiter gateway handler
+	var endPointHandler http.Handler = http.HandlerFunc(s.getCode)
+	if s.rl != nil {
+		endPointHandler = s.rl.RateLimiterGateway(endPointHandler)
+	}
+	mux.Handle("POST /api/shorten", endPointHandler)
+
 	mux.HandleFunc("GET /{code}", s.getLongUrl)
 	mux.HandleFunc("GET /api/v1/links/{code}", s.getLongUrlObj)
 	return mux
@@ -219,6 +233,10 @@ func main() {
 	}
 
 	srv.baseUrl = strings.TrimRight(*baseFlag, "/")
+
+	// initialize rate limiter on server
+	srv.rl = rateLimiter.NewRateLimiter(RATE_PER_MINUTE, RATE_BURST)
+	go srv.rl.CleanupLoop(context.Background(), CLEANUP_LIVING_TIME_MINUTE)
 
 	mux := setupServer(&srv)
 
